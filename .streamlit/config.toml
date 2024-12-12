@@ -1,0 +1,7 @@
+[theme]
+# プロフェッショナルなカラースキーム
+primaryColor="#0066cc"       # メインカラー（青）
+backgroundColor="#ffffff"    # 背景色（白）
+secondaryBackgroundColor="#f0f2f6"  # セカンダリ背景（薄いグレー）
+textColor="#1f2937"         # テキスト色（ダークグレー）
+font="sans serif"           # フォント
