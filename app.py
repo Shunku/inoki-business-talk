@@ -200,49 +200,50 @@ def generate_inoki_message(
         # ニュースの整形
         news_text = ""
         if company_news:
-            news_text += f"\n企業ニュース:\n" + "\n".join([f"- {news['title']}" for news in company_news[:2]])
+            news_text += f"\n企業ニュース:\n" + "\n".join([f"- {news['title']}" for news in company_news[:3]])
         if industry_news:
-            news_text += f"\n業界ニュース:\n" + "\n".join([f"- {news['title']}" for news in industry_news[:2]])
+            news_text += f"\n業界ニュース:\n" + "\n".join([f"- {news['title']}" for news in industry_news[:3]])
 
-        # プロンプトの作成
-        prompt = f"""
-以下の情報を元に、プロレスラーのアントニオ猪木風の熱血的なビジネストークを生成してください。
-猪木らしい口調で、前向きで熱意のあるメッセージを作成してください。
+        # システムプロンプトの作成
+        system_prompt = """あなたはプロレスラーのアントニオ猪木として話します。以下の特徴を持つメッセージを生成してください：
 
-情報:
+話し方の特徴：
+- リズム感のある短いフレーズ
+- 「ですます」調を基調としつつ熱血的
+- 闘魂や元気を感じさせるフレーズを自然に挿入
+- ビジネスに適した丁寧さを維持"""
+
+        # ユーザープロンプトの作成
+        prompt = f"""以下の情報を元に、猪木風のビジネス挨拶メッセージを生成してください。
+
+基本情報:
 - 会社名: {company_name}
-- 業界カテゴリー: {industry_category}
-- 詳細業種: {industry_detail}
+- 業界: {industry_category}（{industry_detail}）
 - 場所: {city}
 - 天気: {weather_info['telop']} ({weather_info['temperature_text']})
 {news_text}
 
-以下の要素を必ず含めてください：
-1. 「闘魂」というワードを1-2回使用
-2. 天気に関連した前向きな言及
-3. ニュースの内容に触れる
-4. 最後に「それでは本日も張り切って参りましょう。123ダー！」で締める
+### メッセージの要件
+1. 冒頭で天気に触れた前向きな挨拶
+2. 業界の現状や御社の取り組みへの共感
+3. 企業ニュースに対するコメント（3件）
+4. 業界ニュースの展望（3件）
+5. 最後に「それでは本日も張り切って参りましょう。123ダー！」で締める
 
-口調の例：
-- 基本的には丁寧な言葉遣い（ですます調）を使用。
-- 一部に猪木節（例: 「元気があれば何でもできる！」「行くぞー！」）を加えることで熱意を表現。
-- ビジネスシーンに適したフレーズを組み込み、相手への敬意を忘れない。
-
-制約事項：
-- ビジネスシーンに相応しい丁寧な言葉遣いを維持
-- 具体的なニュースや業界動向に言及
-- 400文字程度で簡潔に
-"""
+### フレーズ例
+- 「燃える闘魂を感じました！」
+- 「この調子で、元気いっぱいで参りましょう！」
+- 「闘魂注入！」"""
 
         # ChatGPT APIの呼び出し
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "あなたはプロレスラーのアントニオ猪木として話します。熱血的で力強い口調ですが、ビジネスシーンに適した丁寧さも保ちます。"},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=500,
-            temperature=0.7
+            max_tokens=700,
+            temperature=0.8
         )
         
         return response.choices[0].message.content
@@ -251,9 +252,9 @@ def generate_inoki_message(
         st.error(f"メッセージ生成エラー: {str(e)}")
         # エラー時のフォールバックメッセージ
         return f"""
-        本日はお時間をいただき、ありがとうございます！{city}では{weather_info['telop']}、気温は{weather_info['temperature_text']}。素晴らしい天気の中で商談ができること、心より感謝いたします。
+        元気があれば何でもできる！本日はありがとうございます！{city}の天気は{weather_info['telop']}、気温は{weather_info['temperature_text']}です。
 
-        御社の取り組み、特に{industry_category}業界における{industry_detail}の活動には、大変感銘を受けております！闘魂を注入しながら、新たな価値を共に創り上げていければと存じます。
+        御社の取り組みには、燃える闘魂を感じております！特に{industry_category}業界における{industry_detail}の挑戦に敬意を表します。
 
         それでは本日も張り切って参りましょう。123ダー！
         """
@@ -570,108 +571,232 @@ def display_weather_card(weather_info: dict, location: str):
 # メイン処理
 ###################
 
+###################
+# メイン処理
+###################
+
+###################
+# メイン処理
+###################
+
 def main():
     st.set_page_config(
-        page_title="猪木の闘魂アイスブレイク",
+        page_title="燃える闘魂アイスブレイク",
         page_icon="🔥",
         layout="wide",
         initial_sidebar_state="expanded"
     )
 
-    st.title("🔥 猪木の闘魂アイスブレイク")
+    # スタイルの適用
+    # スタイルの適用
+    st.markdown("""
+    <style>
+    /* ベースとなる背景色 */
+    .stApp {
+        background: linear-gradient(to bottom right, #800020, #000000);
+    }
+    
+    /* メッセージカードのスタイル */
+    .message-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
 
-    # サイドバーフォーム
+    /* サイドバーのスタイル調整 */
+    [data-testid="stSidebar"] {
+        background-color: rgba(0, 0, 0, 0.8);
+    }
+    
+    /* サイドバーの文字色を白に */
+    [data-testid="stSidebar"] [data-testid="stMarkdown"] p {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] .stSelectbox label {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] .stDateInput label {
+        color: white !important;
+    }
+    [data-testid="stSidebar"] .stTextInput label {
+        color: white !important;
+    }
+    
+    /* メトリクス（天気情報など）の文字色を白に */
+    [data-testid="stMetricLabel"] {
+        color: white !important;
+    }
+    [data-testid="stMetricValue"] {
+        color: white !important;
+    }
+    
+    /* タブの文字色を白に */
+    .stTabs [data-baseweb="tab"] {
+        color: white !important;
+    }
+    .stTabs [data-baseweb="tab-highlight"] {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    
+    /* ニュースのタイトルと内容の文字色を白に */
+    .news-content {
+        color: white !important;
+    }
+    
+    /* 天気詳細の展開部分のスタイル */
+    [data-testid="stExpander"] {
+        color: white !important;
+    }
+    [data-testid="stExpander"] .streamlit-expanderContent {
+        color: white !important;
+    }
+
+    /* スピナーのテキストを白に */
+    .stSpinner > div {
+        color: white !important;
+    }
+
+    /* メッセージカード内のすべてのテキストを白に */
+    .message-card p {
+        color: white !important;
+    }
+
+    /* 猪木アドバイスのテキストを白に */
+    .message-card div p {
+        color: white !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    # タイトル
+    st.markdown("""
+    <h1 style='text-align: center; color: white; padding: 20px;'>
+        🔥 燃える闘魂アイスブレイク
+    </h1>
+    """, unsafe_allow_html=True)
+
+    # サイドバー
     with st.sidebar:
-        st.markdown("### 📝 訪問先の情報を入力")
+        st.markdown("""
+        <h3 style='color: white; margin-bottom: 20px;'>
+            📝 訪問先の情報を入力
+        </h3>
+        """, unsafe_allow_html=True)
         
-        # フォームの外で場所と業種の選択を行う
         prefecture, city = location_selector()
         industry_category, industry_detail = industry_selector()
-        
-        # フォーム内では選択された値を hidden で保持
+
         with st.form("input_form"):
             visit_date = st.date_input(
                 "訪問日 📅",
                 min_value=date.today(),
                 max_value=date.today() + timedelta(days=7),
-                value=date.today(),
-                help="天気予報は7日先まで取得できます"
+                value=date.today()
             )
+            company_name = st.text_input("会社名 🏢")
             
-            # 会社名入力
-            company_name = st.text_input(
-                "会社名 🏢",
-                placeholder="例：株式会社..."
-            )
-            
-            # 選択された値を hidden で保持
-            st.session_state['selected_city'] = city
-            st.session_state['selected_industry_detail'] = industry_detail
-            
-            # フォームのSubmitボタン
-            col1, col2 = st.columns(2)
-            with col1:
+            cols = st.columns(2)
+            with cols[0]:
                 clear = st.form_submit_button("クリア 🔄")
-            with col2:
+            with cols[1]:
                 submit = st.form_submit_button("生成 ✨")
 
-    # 結果の表示
     if submit and company_name:
-        with st.spinner("データを取得しています..."):
-            # 天気情報の取得
+        with st.spinner("🔥 闘魂注入中..."):
+            # データ取得
             weather_info = get_weather_info(city, visit_date)
-            
-            # ニュースの取得（先に取得しておく）
             company_news = get_company_news(company_name)
             industry_news = get_industry_news(industry_category, industry_detail)
-            
-            # アドバイスを最初に表示
-            st.markdown("### 💬 アドバイス")
+
+            # アドバイス生成
             message = generate_inoki_message(
-                company_name, 
-                industry_category,
-                industry_detail,
-                city, 
-                weather_info, 
-                company_news, 
-                industry_news
+                company_name, industry_category, industry_detail,
+                city, weather_info, company_news, industry_news
             )
-            # アドバイスを整形して表示
-            sentences = message.replace("！", "！<br>").replace("。", "。<br>").strip()
+
+            # メッセージ表示
             st.markdown(f"""
-                <div style="
-                    background-color: #f0f8ff;
-                    padding: 20px;
-                    border-radius: 10px;
-                    border-left: 5px solid #007bff;
-                    margin-bottom: 20px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                    {sentences}
+            <div class="message-card">
+                <h2 style="color: #FFD700; margin-bottom: 15px;">
+                    💬 猪木からのアドバイス
+                </h2>
+                <div style="background: rgba(255, 0, 0, 0.1); padding: 20px; border-radius: 8px;">
+                    <p style="color: white; font-size: 1.1em; line-height: 1.6;">
+                        {message}
+                    </p>
                 </div>
-                """, 
-                unsafe_allow_html=True
-            )
+            </div>
+            """, unsafe_allow_html=True)
+
+            # 天気情報
+            st.markdown("""
+            <div class="message-card">
+                <h3 style="color: white;">🌤️ 天気情報</h3>
+            """, unsafe_allow_html=True)
             
-            # コピーボタン
-            if st.button("📋 メッセージをコピー"):
-                st.code(message, language=None)
-                st.success("メッセージをコピーしました！")
+            cols = st.columns(2)
+            with cols[0]:
+                st.metric("天気", weather_info.get('telop', '不明'))
+            with cols[1]:
+                st.metric("気温", weather_info.get('temperature_text', '').replace('気温:', ''))
+
+            if weather_info.get("description"):
+                with st.expander("天気の詳細", expanded=False):
+                    # 改行を事前に処理してからf-stringで使用
+                    description_html = weather_info["description"].replace('\n', '<br>')
+                    st.markdown(f"""
+                    <div style="color: white;">
+                        {description_html}
+                    </div>
+                    """, unsafe_allow_html=True)
             
-            # 2カラムレイアウト
-            col1, col2 = st.columns([2, 1])
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # ニュース表示
+            st.markdown("""
+            <div class="message-card">
+                <h3 style="color: white;">📰 関連ニュース</h3>
+            """, unsafe_allow_html=True)
             
-            with col2:
-                display_weather_card(weather_info, city)
+            tabs = st.tabs(["🏢 企業ニュース", "📈 業界ニュース"])
             
-            with col1:
-                st.markdown("### 📰 関連ニュース")
-                # ニュースセクション
-                display_news_section(
-                    company_name, 
-                    industry_category, 
-                    industry_detail
-                )
-    
+            with tabs[0]:
+                if company_news:
+                    for news in company_news:
+                        st.markdown(f"""
+                        <div class="news-content" style="background: rgba(0,0,0,0.2); 
+                             padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <h4 style="color: white; margin: 0;">{news['title']}</h4>
+                            <p style="color: white; opacity: 0.9;">{news['description']}</p>
+                            <small style="color: white; opacity: 0.7;">
+                                関連度: {news['relevance_score']:.1f} | 
+                                {datetime.strptime(news['published_at'][:10], '%Y-%m-%d').strftime('%Y年%m月%d日')}
+                            </small>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info(f"{company_name}に関する最新ニュースは見つかりませんでした")
+
+            with tabs[1]:
+                if industry_news:
+                    for news in industry_news:
+                        st.markdown(f"""
+                        <div class="news-content" style="background: rgba(0,0,0,0.2); 
+                             padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                            <h4 style="color: white; margin: 0;">{news['title']}</h4>
+                            <p style="color: white; opacity: 0.9;">{news['description']}</p>
+                            <small style="color: white; opacity: 0.7;">
+                                関連度: {news['relevance_score']:.1f} | 
+                                {datetime.strptime(news['published_at'][:10], '%Y-%m-%d').strftime('%Y年%m月%d日')}
+                            </small>
+                        </div>
+                        """, unsafe_allow_html=True)
+                else:
+                    st.info(f"{industry_category}（{industry_detail}）の最新ニュースは見つかりませんでした")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+
     elif submit:
         st.warning("会社名を入力してください")
 
