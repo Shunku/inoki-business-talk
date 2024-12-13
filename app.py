@@ -93,6 +93,7 @@ CITY_CODES = {
     "福岡市": "400010",
     "北九州市": "401000"
 }
+
 ###################
 # Weather API 関連の実装
 ###################
@@ -343,9 +344,39 @@ def get_industry_news(industry_category: str, industry_detail: str) -> List[Dict
     
     # NGワードリスト
     ng_words = ["ちょいブス", "エ□", "まとめ", "2ch", "アフィリエイト", "まとめサイト", "速報"]
-
-    # 検索クエリの作成
-    search_query = f"{industry_category} AND {industry_detail}"
+    
+    # 業界特有の検索キーワード
+    category_keywords = {
+        "製造業": ["製造", "メーカー", "工場"],
+        "情報通信業": ["IT", "情報通信", "テクノロジー"],
+        "小売業": ["小売", "販売", "店舗"],
+        "金融業": ["金融", "銀行", "投資"],
+        "不動産業": ["不動産", "住宅", "建物"],
+        "建設業": ["建設", "工事", "施工"],
+        "運輸・物流業": ["物流", "運送", "輸送"],
+        "エネルギー": ["エネルギー", "電力", "発電"],
+        "サービス業": ["サービス", "顧客"],
+        "医療・ヘルスケア": ["医療", "健康", "病院"]
+    }
+    
+    detail_keywords = {
+        "自動車・輸送機器": ["自動車", "車", "EV", "電気自動車"],
+        "電機・電子機器": ["電機", "電子", "家電"],
+        "ソフトウェア・情報サービス": ["ソフトウェア", "アプリ", "システム", "IT"],
+        "通信キャリア": ["通信", "携帯", "モバイル"],
+        "インターネットサービス": ["インターネット", "オンライン", "デジタル"]
+    }
+    
+    # 検索キーワードの準備
+    search_terms = []
+    # カテゴリーのキーワードを追加
+    search_terms.extend(category_keywords.get(industry_category, [industry_category]))
+    # 詳細業種のキーワードを追加
+    search_terms.extend(detail_keywords.get(industry_detail, [industry_detail]))
+    
+    # 重複を除去してクエリを構築
+    search_terms = list(set(search_terms))
+    search_query = " OR ".join(search_terms)
 
     params = {
         "q": search_query,
@@ -375,17 +406,12 @@ def get_industry_news(industry_category: str, industry_detail: str) -> List[Dict
                 # スコア計算
                 score = 0
                 
-                # カテゴリーとの関連性チェック
-                if industry_category.lower() in title_lower:
-                    score += 3
-                if industry_category.lower() in desc_lower:
-                    score += 2
-                
-                # 詳細業種との関連性チェック
-                if industry_detail.lower() in title_lower:
-                    score += 3
-                if industry_detail.lower() in desc_lower:
-                    score += 2
+                # キーワードとの関連性チェック
+                for term in search_terms:
+                    if term.lower() in title_lower:
+                        score += 2
+                    if term.lower() in desc_lower:
+                        score += 1
                 
                 # ドメインスコアの追加
                 domain = article["url"].lower()
@@ -398,7 +424,7 @@ def get_industry_news(industry_category: str, industry_detail: str) -> List[Dict
                 days_old = (datetime.now() - datetime.strptime(article["publishedAt"][:10], "%Y-%m-%d")).days
                 score += max(0, 2 - (days_old * 0.1))
                 
-                if score >= 5:  # より厳密なスコアのしきい値
+                if score >= 2:  # スコアの閾値を下げる
                     scored_articles.append({
                         "title": article["title"],
                         "description": article["description"],
@@ -628,7 +654,7 @@ def main():
             
             # コピーボタン
             if st.button("📋 メッセージをコピー"):
-                st.code(formatted_message, language=None)
+                st.code(message, language=None)
                 st.success("メッセージをコピーしました！")
             
             # 2カラムレイアウト
